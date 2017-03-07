@@ -3,6 +3,9 @@ package com.example.yhdj.ad0313baidumap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -10,31 +13,86 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.Poi;
 import com.baidu.mapapi.SDKInitializer;
-import com.baidu.mapapi.map.TextureMapView;
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.model.LatLng;
 
 import java.util.List;
 
+
 public class MainActivity extends AppCompatActivity {
-    TextureMapView mMapView = null;
+
+    private MapView mMapView = null;
     public LocationClient mLocationClient = null;
     public BDLocationListener myListener = new MyLocationListener();
+    private BaiduMap mBaiduMap;
+    private boolean isFirstLocate = true;
+    private Button mBtnSearch;
+    private EditText mEdtCity;
+    private EditText mEdiContent;
+    private String city;
+    private String content;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocationClient = new LocationClient(getApplicationContext());
         //声明LocationClient类
-        mLocationClient.registerLocationListener( myListener );
+        mLocationClient.registerLocationListener(myListener);
         //注册监听函数
-
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
-        mMapView = (TextureMapView) findViewById(R.id.bmapView);
+        initViews();
+        mMapView = (MapView) findViewById(R.id.bmapView);
+        mBaiduMap = mMapView.getMap();
+        mBaiduMap.setMyLocationEnabled(true);
         initLocation();
         mLocationClient.start();
+
     }
 
+    private void initViews() {
+//        mEdtCity = (EditText) findViewById(R.id.edt_city);
+//        mEdiContent = (EditText) findViewById(R.id.edt_content);
+//        if(mEdiContent.getText().toString().isEmpty() || mEdtCity.getText().toString().isEmpty()){
+//            Toast.makeText(this, "城市和搜索内容不能为空！！！", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//        mBtnSearch = (Button) findViewById(R.id.btn_search);
+//        mBtnSearch.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                getContent();
+//            }
+//        });
+    }
 
-    private void initLocation(){
+    private void getContent() {
+//        city = mEdtCity.getText().toString().trim();
+//        content = mEdiContent.getText().toString().trim();
+    }
+
+    private void navigateTo(BDLocation location) {
+        if (isFirstLocate) {
+            LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+            Toast.makeText(this, "" + location.getLatitude() + location.getLongitude(), Toast.LENGTH_SHORT).show();
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+            mBaiduMap.animateMapStatus(update);
+            update = MapStatusUpdateFactory.zoomTo(16f);
+            mBaiduMap.animateMapStatus(update);
+            isFirstLocate = false;
+        }
+        MyLocationData.Builder builder = new MyLocationData.Builder();
+        builder.latitude(location.getLatitude());
+        builder.longitude(location.getLongitude());
+        MyLocationData data = builder.build();
+        mBaiduMap.setMyLocationData(data);
+    }
+
+    private void initLocation() {
         LocationClientOption option = new LocationClientOption();
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
         //可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
@@ -42,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         option.setCoorType("bd09ll");
         //可选，默认gcj02，设置返回的定位结果坐标系
 
-        int span=1000;
+        int span = 1000;
         option.setScanSpan(span);
         //可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
 
@@ -78,13 +136,17 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
         mMapView.onDestroy();
+        mLocationClient.stop();
+        mBaiduMap.setMyLocationEnabled(false);
     }
+
     @Override
     protected void onResume() {
         super.onResume();
         //在activity执行onResume时执行mMapView. onResume ()，实现地图生命周期管理
         mMapView.onResume();
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -92,10 +154,15 @@ public class MainActivity extends AppCompatActivity {
         mMapView.onPause();
     }
 
+
     public class MyLocationListener implements BDLocationListener {
 
         @Override
         public void onReceiveLocation(BDLocation location) {
+
+            if (location.getLocType() == BDLocation.TypeGpsLocation || location.getLocType() == BDLocation.TypeNetWorkLocation) {
+                navigateTo(location);
+            }
 
             //获取定位结果
             StringBuffer sb = new StringBuffer(256);
@@ -115,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
             sb.append("\nradius : ");
             sb.append(location.getRadius());    //获取定位精准度
 
-            if (location.getLocType() == BDLocation.TypeGpsLocation){
+            if (location.getLocType() == BDLocation.TypeGpsLocation) {
 
                 // GPS定位结果
                 sb.append("\nspeed : ");
@@ -136,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                 sb.append("\ndescribe : ");
                 sb.append("gps定位成功");
 
-            } else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
+            } else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {
 
                 // 网络定位结果
                 sb.append("\naddr : ");
@@ -191,5 +258,7 @@ public class MainActivity extends AppCompatActivity {
         public void onConnectHotSpotMessage(String s, int i) {
 
         }
+
+
     }
 }
