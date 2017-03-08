@@ -11,6 +11,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.MapStatus;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.core.SearchResult;
 import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
 import com.baidu.mapapi.search.poi.PoiCitySearchOption;
 import com.baidu.mapapi.search.poi.PoiDetailResult;
@@ -20,12 +27,12 @@ import com.baidu.mapapi.search.poi.PoiSearch;
 import com.baidu.mapapi.search.route.BikingRouteResult;
 import com.baidu.mapapi.search.route.DrivingRouteResult;
 import com.baidu.mapapi.search.route.IndoorRouteResult;
+import com.baidu.mapapi.search.route.MassTransitRoutePlanOption;
 import com.baidu.mapapi.search.route.MassTransitRouteResult;
 import com.baidu.mapapi.search.route.OnGetRoutePlanResultListener;
 import com.baidu.mapapi.search.route.PlanNode;
 import com.baidu.mapapi.search.route.RoutePlanSearch;
 import com.baidu.mapapi.search.route.TransitRouteLine;
-import com.baidu.mapapi.search.route.TransitRoutePlanOption;
 import com.baidu.mapapi.search.route.TransitRouteResult;
 import com.baidu.mapapi.search.route.WalkingRouteResult;
 
@@ -53,12 +60,20 @@ public class SearchActivity extends AppCompatActivity {
     private ArrayList<String> location = new ArrayList<>();
     private RoutePlanSearch mRoutePlanSearch;
     private List<TransitRouteLine> list = new ArrayList<>();
+    private StringBuffer buffer = new StringBuffer();
+    private MapView mMapView;
+    LatLng begin;
+    LatLng end;
+    private BaiduMap mBaiduMap;
+    private String uid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.title);
         initViews();
+        mBaiduMap = mMapView.getMap();
+        mBaiduMap.setMyLocationEnabled(true);
     }
 
 
@@ -70,19 +85,67 @@ public class SearchActivity extends AppCompatActivity {
 
         @Override
         public void onGetTransitRouteResult(TransitRouteResult transitRouteResult) {
+            if (transitRouteResult == null || transitRouteResult.error != SearchResult.ERRORNO.NO_ERROR) {
+                //未找到结果
+                return;
+            }
+            if (transitRouteResult.error == SearchResult.ERRORNO.AMBIGUOUS_ROURE_ADDR) {
+                //起终点或途经点地址有岐义，通过以下接口获取建议查询信息
+                //result.getSuggestAddrInfo()
+                return;
+            }
+            if (transitRouteResult.error == SearchResult.ERRORNO.NO_ERROR) {
+                TransitRouteLine route = transitRouteResult.getRouteLines().get(0);
+                //创建公交路线规划线路覆盖物
+
+
+            }
+
+
             list = transitRouteResult.getRouteLines();
             Toast.makeText(SearchActivity.this, "TransitRouteResult===========" + transitRouteResult.getRouteLines(), Toast.LENGTH_SHORT).show();
             tv_content.setText("distance:" + list.get(0).getDistance() + "duration:" + list.get(0).getDuration()
-                    + "" + list.get(0).getAllStep().get(0).getInstructions()+ list.get(0).getAllStep().get(2).getInstructions()+ "getVehicleInfo  "+ list.get(0).getAllStep().get(0).getVehicleInfo() +
-                  "getEntrance" + list.get(0).getAllStep().get(0).getEntrance() + "getStepType"+ list.get(0).getAllStep().get(0).getStepType() +
-                  "getExit"  + list.get(0).getAllStep().get(0).getExit() + list.get(1).getAllStep().get(0).getInstructions()
+                    + "" + list.get(0).getAllStep().get(0).getInstructions() + list.get(0).getAllStep().get(2).getInstructions() + "getVehicleInfo  " + list.get(0).getAllStep().get(0).getVehicleInfo() +
+                    "getEntrance" + list.get(0).getAllStep().get(0).getEntrance() + "getStepType" + list.get(0).getAllStep().get(0).getStepType() +
+                    "getExit" + list.get(0).getAllStep().get(0).getExit() + list.get(1).getAllStep().get(0).getInstructions()
             );
         }
 
         @Override
         public void onGetMassTransitRouteResult(MassTransitRouteResult result) {
             //获取跨城综合公共交通线路规划结果
-            Toast.makeText(SearchActivity.this, "MassTransitRouteResult:::::" + result.getSuggestAddrInfo(), Toast.LENGTH_SHORT).show();
+            begin = result.getRouteLines().get(0).getNewSteps().get(0).get(0).getStartLocation();
+
+            end = result.getRouteLines().get(0).getNewSteps().get(0).get(0).getEndLocation();
+            for (int i = 0; i < result.getRouteLines().size(); i++) {
+                float duration = ((float) result.getRouteLines().get(i).getDuration() / 3600);
+                String dur = String.valueOf(((float) result.getRouteLines().get(i).getDuration() / 3600)).substring(0, 4);
+                buffer.append("第" + (i + 1) + "种方案："); // + "用时：" +dur +"小时" + "距离" + (double)result.getRouteLines().get(i).getDistance()/1000 + "千米" + "\n");
+                for (int y = 0; y < result.getRouteLines().get(i).getNewSteps().size(); y++) {
+                    for (int z = 0; z < result.getRouteLines().get(i).getNewSteps().get(y).size(); z++) {
+                        buffer.append(result.getRouteLines().get(i).getNewSteps().get(y).get(z).getInstructions() + "\n"
+
+
+                        );
+                    }
+                }
+            }
+            Log.i("ccccccccccccccccc", "latitude: " + begin.latitude + "longitude" + begin.longitude);
+
+            MyLocationData data = new MyLocationData.Builder()
+
+
+                    .direction(100).latitude(begin.latitude).longitude(begin.longitude).build();
+            mBaiduMap.setMyLocationData(data);
+            MapStatus.Builder buider = new MapStatus.Builder();
+            buider.target(begin).zoom(18.0f);
+            mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(buider.build()));
+
+
+            // tv_content.setText(buffer.toString());
+
+            Toast.makeText(SearchActivity.this, "MassTransitRouteResult:::::" + result.getRouteLines().get(0).getNewSteps().get(0).get(0).getInstructions(), Toast.LENGTH_SHORT).show();
+
         }
 
         @Override
@@ -105,6 +168,7 @@ public class SearchActivity extends AppCompatActivity {
     private void initViews() {
         mPoiSearch = PoiSearch.newInstance();
         mRoutePlanSearch = RoutePlanSearch.newInstance();
+        mMapView = (MapView) findViewById(R.id.mMapView);
         tv_content = (TextView) findViewById(R.id.tv_content);
         mRoutePlanSearch.setOnGetRoutePlanResultListener(routeListener);
         linearLayout_city = (LinearLayout) findViewById(R.id.linearLayout_city);
@@ -126,7 +190,6 @@ public class SearchActivity extends AppCompatActivity {
                 linearLayout_routePlan.setVisibility(View.GONE);
             }
         });
-
 
 
         //城市检索
@@ -157,6 +220,7 @@ public class SearchActivity extends AppCompatActivity {
         btn_search3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tv_content.setText("");
                 String begin_city = edt_begin_city.getText().toString().trim();
                 String end_city = edt_end_city.getText().toString().trim();
                 String starting_point = edt_staring_point.getText().toString().trim();
@@ -164,9 +228,9 @@ public class SearchActivity extends AppCompatActivity {
                 PlanNode stMassNode = PlanNode.withCityNameAndPlaceName(begin_city, starting_point);
                 PlanNode enMassNode = PlanNode.withCityNameAndPlaceName(end_city, destination);
 
-                //  mRoutePlanSearch.masstransitSearch(new MassTransitRoutePlanOption().from(stMassNode).to(enMassNode));
+                mRoutePlanSearch.masstransitSearch(new MassTransitRoutePlanOption().from(stMassNode).to(enMassNode));
                 // mRoutePlanSearch.walkingSearch(new WalkingRoutePlanOption().from(stMassNode).to(enMassNode));
-                mRoutePlanSearch.transitSearch(new TransitRoutePlanOption().from(stMassNode).to(enMassNode).city("广州"));
+                //  mRoutePlanSearch.transitSearch(new TransitRoutePlanOption().from(stMassNode).to(enMassNode).city("广州"));
             }
         });
 
@@ -177,11 +241,17 @@ public class SearchActivity extends AppCompatActivity {
             //获取POI检索结果
 
 
-            Log.i("bbbbbbbbbbbbb", "onGetPoiResult: " + result.getAllPoi().get(0).address);
+//            Log.i("bbbbbbbbbbbbb", "onGetPoiResult: " + result.getAllPoi().get(0).address);
+//
+//            Intent intent = new Intent(SearchActivity.this, MainActivity.class);
+//            getlocation(result);
+//            intent.putExtra("location", location);
+//            startActivity(intent);
 
-            Intent intent = new Intent(SearchActivity.this, MainActivity.class);
-            getlocation(result);
-            intent.putExtra("location", location);
+            Intent intent = new Intent(SearchActivity.this, PanoramaDemoActivityMain.class);
+            intent.putExtra("latitude", result.getAllPoi().get(0).location.latitude);
+            intent.putExtra("longitude", result.getAllPoi().get(0).location.longitude);
+            intent.putExtra("uid",result.getAllPoi().get(0).uid);
             startActivity(intent);
             mPoiSearch.destroy();
         }

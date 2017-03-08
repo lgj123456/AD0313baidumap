@@ -9,6 +9,8 @@
     tools:context="com.example.yhdj.ad0313baidumap.MainActivity">
 
 
+
+
    <EditText
        android:layout_width="match_parent"
        android:layout_height="50dp"
@@ -16,7 +18,12 @@
        android:hint="点击搜索"
        />
 
-
+<Button
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/btn_panorama"
+    android:text="全景"
+    />
 
 
     <com.baidu.mapapi.map.MapView
