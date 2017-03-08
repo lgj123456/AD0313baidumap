@@ -3,6 +3,7 @@ package com.example.yhdj.ad0313baidumap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -14,11 +15,22 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.location.Poi;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.core.PoiInfo;
+import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
+import com.baidu.mapapi.search.poi.PoiCitySearchOption;
+import com.baidu.mapapi.search.poi.PoiDetailResult;
+import com.baidu.mapapi.search.poi.PoiIndoorResult;
+import com.baidu.mapapi.search.poi.PoiResult;
+import com.baidu.mapapi.search.poi.PoiSearch;
 
 import java.util.List;
 
@@ -35,8 +47,10 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEdiContent;
     private String city;
     private String content;
+    private PoiSearch mPoiSearch;
+    private LatLng ll2;
 
-    @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocationClient = new LocationClient(getApplicationContext());
@@ -49,36 +63,88 @@ public class MainActivity extends AppCompatActivity {
         mMapView = (MapView) findViewById(R.id.bmapView);
         mBaiduMap = mMapView.getMap();
         mBaiduMap.setMyLocationEnabled(true);
+        mPoiSearch = PoiSearch.newInstance();
         initLocation();
         mLocationClient.start();
-
+        mBaiduMap.setTrafficEnabled(true);
     }
 
+
+    OnGetPoiSearchResultListener poiListener = new OnGetPoiSearchResultListener() {
+        public void onGetPoiResult(PoiResult result) {
+            mBaiduMap.clear();
+            List<PoiInfo> allAddr = result.getAllPoi();
+            Toast.makeText(MainActivity.this, "" + allAddr.get(0).address + "  "
+                            + allAddr.get(0).name
+                    , Toast.LENGTH_SHORT).show();
+            for (PoiInfo p : allAddr) {
+                Log.i("MainActivity", "p.name--->" + p.name + "p.phoneNum" + p.phoneNum + " -->p.address:" + p.address + "p.location" + p.location);
+                //定义Maker坐标点
+                LatLng point = new LatLng(p.location.latitude, p.location.longitude);
+            //构建Marker图标
+                BitmapDescriptor bitmap = BitmapDescriptorFactory
+                        .fromResource(R.drawable.a);
+            //构建MarkerOption，用于在地图上添加Marker
+                OverlayOptions option = new MarkerOptions()
+                        .position(point)
+                        .icon(bitmap);
+            //在地图上添加Marker，并显示
+                mBaiduMap.addOverlay(option);
+            }
+
+
+        }
+
+        public void onGetPoiDetailResult(PoiDetailResult result) {
+            //获取Place详情页检索结果
+        }
+
+        @Override
+        public void onGetPoiIndoorResult(PoiIndoorResult poiIndoorResult) {
+
+        }
+    };
+
+
     private void initViews() {
-//        mEdtCity = (EditText) findViewById(R.id.edt_city);
-//        mEdiContent = (EditText) findViewById(R.id.edt_content);
-//        if(mEdiContent.getText().toString().isEmpty() || mEdtCity.getText().toString().isEmpty()){
-//            Toast.makeText(this, "城市和搜索内容不能为空！！！", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//        mBtnSearch = (Button) findViewById(R.id.btn_search);
-//        mBtnSearch.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                getContent();
-//            }
-//        });
+        mEdtCity = (EditText) findViewById(R.id.edt_city);
+        mEdiContent = (EditText) findViewById(R.id.edr_content);
+
+        mBtnSearch = (Button) findViewById(R.id.btn_search);
+        mBtnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mEdiContent.getText().toString().isEmpty() || mEdtCity.getText().toString().isEmpty()) {
+                    Toast.makeText(MainActivity.this, "城市和搜索内容不能为空！！！", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                getContent();
+                mPoiSearch.setOnGetPoiSearchResultListener(poiListener);
+                //检索城市
+               mPoiSearch.searchInCity((new PoiCitySearchOption()
+               .city(city)
+                       .keyword(content)
+                       .pageCapacity(500)
+               ));
+
+             //检索周边
+               // mPoiSearch.searchNearby(new PoiNearbySearchOption().location(ll2).keyword(content).radius(30000).pageNum(1).pageCapacity(50));
+
+            }
+        });
     }
 
     private void getContent() {
-//        city = mEdtCity.getText().toString().trim();
-//        content = mEdiContent.getText().toString().trim();
+        city = mEdtCity.getText().toString().trim();
+        content = mEdiContent.getText().toString().trim();
     }
 
     private void navigateTo(BDLocation location) {
         if (isFirstLocate) {
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
             Toast.makeText(this, "" + location.getLatitude() + location.getLongitude(), Toast.LENGTH_SHORT).show();
+
             MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
             mBaiduMap.animateMapStatus(update);
             update = MapStatusUpdateFactory.zoomTo(16f);
@@ -138,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
         mMapView.onDestroy();
         mLocationClient.stop();
         mBaiduMap.setMyLocationEnabled(false);
+        mPoiSearch.destroy();
     }
 
     @Override
@@ -159,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceiveLocation(BDLocation location) {
+
+            ll2 = new LatLng(location.getLatitude(), location.getLongitude());
 
             if (location.getLocType() == BDLocation.TypeGpsLocation || location.getLocType() == BDLocation.TypeNetWorkLocation) {
                 navigateTo(location);
@@ -261,4 +330,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+
 }
