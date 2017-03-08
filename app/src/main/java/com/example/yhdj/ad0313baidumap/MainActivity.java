@@ -1,6 +1,8 @@
 package com.example.yhdj.ad0313baidumap;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -26,16 +28,16 @@ import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.search.core.PoiInfo;
 import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
-import com.baidu.mapapi.search.poi.PoiCitySearchOption;
 import com.baidu.mapapi.search.poi.PoiDetailResult;
 import com.baidu.mapapi.search.poi.PoiIndoorResult;
 import com.baidu.mapapi.search.poi.PoiResult;
 import com.baidu.mapapi.search.poi.PoiSearch;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     private MapView mMapView = null;
     public LocationClient mLocationClient = null;
@@ -49,10 +51,16 @@ public class MainActivity extends AppCompatActivity {
     private String content;
     private PoiSearch mPoiSearch;
     private LatLng ll2;
+    private EditText edt_search;
 
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //隐藏标题栏
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
         mLocationClient = new LocationClient(getApplicationContext());
         //声明LocationClient类
         mLocationClient.registerLocationListener(myListener);
@@ -67,30 +75,44 @@ public class MainActivity extends AppCompatActivity {
         initLocation();
         mLocationClient.start();
         mBaiduMap.setTrafficEnabled(true);
+        getLocation();
+    }
+
+    private void getLocation() {
+        Intent intent = getIntent();
+        if(intent != null){
+         ArrayList<String> lo =  intent.getStringArrayListExtra("location");
+            if(lo != null){
+               showLocation(lo);
+
+            }
+
+        }
+    }
+
+    private void showLocation(ArrayList<String> lo) {
+        for(int i = 0; i < lo.size() - 1; i++){
+            LatLng point = new LatLng(Double.parseDouble(lo.get(i)),Double.parseDouble(lo.get(i + 1)));
+
+
+            //构建Marker图标
+            BitmapDescriptor bitmap = BitmapDescriptorFactory
+                    .fromResource(R.drawable.a);
+            //构建MarkerOption，用于在地图上添加Marker
+            OverlayOptions option = new MarkerOptions()
+                    .position(point)
+                    .icon(bitmap);
+            //在地图上添加Marker，并显示
+            mBaiduMap.addOverlay(option);
+        }
+
     }
 
 
     OnGetPoiSearchResultListener poiListener = new OnGetPoiSearchResultListener() {
         public void onGetPoiResult(PoiResult result) {
-            mBaiduMap.clear();
-            List<PoiInfo> allAddr = result.getAllPoi();
-            Toast.makeText(MainActivity.this, "" + allAddr.get(0).address + "  "
-                            + allAddr.get(0).name
-                    , Toast.LENGTH_SHORT).show();
-            for (PoiInfo p : allAddr) {
-                Log.i("MainActivity", "p.name--->" + p.name + "p.phoneNum" + p.phoneNum + " -->p.address:" + p.address + "p.location" + p.location);
-                //定义Maker坐标点
-                LatLng point = new LatLng(p.location.latitude, p.location.longitude);
-            //构建Marker图标
-                BitmapDescriptor bitmap = BitmapDescriptorFactory
-                        .fromResource(R.drawable.a);
-            //构建MarkerOption，用于在地图上添加Marker
-                OverlayOptions option = new MarkerOptions()
-                        .position(point)
-                        .icon(bitmap);
-            //在地图上添加Marker，并显示
-                mBaiduMap.addOverlay(option);
-            }
+
+            showOnMap(result);
 
 
         }
@@ -105,40 +127,70 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private void showOnMap(PoiResult result) {
+        mBaiduMap.clear();
+        List<PoiInfo> allAddr = result.getAllPoi();
+        Toast.makeText(MainActivity.this, "" + allAddr.get(0).address + "  "
+                        + allAddr.get(0).name
+                , Toast.LENGTH_SHORT).show();
+        for (PoiInfo p : allAddr) {
+            Log.i("MainActivity", "p.name--->" + p.name + "p.phoneNum" + p.phoneNum + " -->p.address:" + p.address + "p.location" + p.location);
+            //定义Maker坐标点
+            LatLng point = new LatLng(p.location.latitude, p.location.longitude);
+            //构建Marker图标
+            BitmapDescriptor bitmap = BitmapDescriptorFactory
+                    .fromResource(R.drawable.a);
+            //构建MarkerOption，用于在地图上添加Marker
+            OverlayOptions option = new MarkerOptions()
+                    .position(point)
+                    .icon(bitmap);
+            //在地图上添加Marker，并显示
+            mBaiduMap.addOverlay(option);
+        }
+
+    }
 
     private void initViews() {
-        mEdtCity = (EditText) findViewById(R.id.edt_city);
-        mEdiContent = (EditText) findViewById(R.id.edr_content);
-
-        mBtnSearch = (Button) findViewById(R.id.btn_search);
-        mBtnSearch.setOnClickListener(new View.OnClickListener() {
+        edt_search = (EditText) findViewById(R.id.edt_search);
+        edt_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mEdiContent.getText().toString().isEmpty() || mEdtCity.getText().toString().isEmpty()) {
-                    Toast.makeText(MainActivity.this, "城市和搜索内容不能为空！！！", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                getContent();
-                mPoiSearch.setOnGetPoiSearchResultListener(poiListener);
-                //检索城市
-               mPoiSearch.searchInCity((new PoiCitySearchOption()
-               .city(city)
-                       .keyword(content)
-                       .pageCapacity(500)
-               ));
-
-             //检索周边
-               // mPoiSearch.searchNearby(new PoiNearbySearchOption().location(ll2).keyword(content).radius(30000).pageNum(1).pageCapacity(50));
-
+                Intent intent = new Intent(MainActivity.this,SearchActivity.class);
+                startActivity(intent);
             }
         });
+        //  mEdtCity = (EditText) findViewById(R.id.edt_city);
+        //  mEdiContent = (EditText) findViewById(R.id.edr_content);
+
+        //  mBtnSearch = (Button) findViewById(R.id.btn_search);
+//        mBtnSearch.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (mEdiContent.getText().toString().isEmpty() || mEdtCity.getText().toString().isEmpty()) {
+//                    Toast.makeText(MainActivity.this, "城市和搜索内容不能为空！！！", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//
+//                getContent();
+//                mPoiSearch.setOnGetPoiSearchResultListener(poiListener);
+//                //检索城市
+//               mPoiSearch.searchInCity((new PoiCitySearchOption()
+//               .city(city)
+//                       .keyword(content)
+//                       .pageCapacity(500)
+//               ));
+//
+//             //检索周边
+//               // mPoiSearch.searchNearby(new PoiNearbySearchOption().location(ll2).keyword(content).radius(30000).pageNum(1).pageCapacity(50));
+//
+//            }
+//        });
     }
 
-    private void getContent() {
-        city = mEdtCity.getText().toString().trim();
-        content = mEdiContent.getText().toString().trim();
-    }
+//    private void getContent() {
+//        city = mEdtCity.getText().toString().trim();
+//        content = mEdiContent.getText().toString().trim();
+//    }
 
     private void navigateTo(BDLocation location) {
         if (isFirstLocate) {
@@ -220,6 +272,9 @@ public class MainActivity extends AppCompatActivity {
         //在activity执行onPause时执行mMapView. onPause ()，实现地图生命周期管理
         mMapView.onPause();
     }
+
+
+
 
 
     public class MyLocationListener implements BDLocationListener {
