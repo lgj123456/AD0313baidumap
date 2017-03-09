@@ -2,7 +2,6 @@ package com.example.yhdj.ad0313baidumap;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -33,7 +32,6 @@ import com.baidu.mapapi.search.poi.PoiDetailResult;
 import com.baidu.mapapi.search.poi.PoiIndoorResult;
 import com.baidu.mapapi.search.poi.PoiResult;
 import com.baidu.mapapi.search.poi.PoiSearch;
-import com.baidu.navisdk.adapter.BaiduNaviManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,7 +95,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void showLocation(ArrayList<String> lo) {
-        for(int i = 0; i < lo.size() - 1; i++){
+        for(int i = 0; i < lo.size() - 1; i+=2){
             LatLng point = new LatLng(Double.parseDouble(lo.get(i)),Double.parseDouble(lo.get(i + 1)));
 
 
@@ -156,55 +154,19 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
-
-    private void initNavi() {
-        // 申请权限
-
-        BaiduNaviManager.getInstance().init(this, Environment.getExternalStorageDirectory().getAbsolutePath(), "baidumap",
-                new BaiduNaviManager.NaviInitListener() {
-                    @Override
-                    public void onAuthResult(int status, String msg) {
-
-                        if (0 == status) {
-                           authinfo = "key校验成功!";
-
-                        } else {
-                          authinfo = "key校验失败, " + msg;
-                        }
-                        MainActivity.this.runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                Toast.makeText(MainActivity.this, authinfo, Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-
-                    public void initSuccess() {
-                        Toast.makeText(MainActivity.this, "百度导航引擎初始化成功", Toast.LENGTH_SHORT).show();
-                    }
-
-                    public void initStart() {
-                        Toast.makeText(MainActivity.this, "百度导航引擎初始化开始", Toast.LENGTH_SHORT).show();
-                    }
-
-                    public void initFailed() {
-                        Toast.makeText(MainActivity.this, "百度导航引擎初始化失败", Toast.LENGTH_SHORT).show();
-                    }
-                }, null /*mTTSCallback*/);
-    }
-
-
     private void initViews() {
 
-        btn_panorama = (Button) findViewById(R.id.btn_panorama);
-        btn_panorama.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,PanoramaDemoActivityMain.class);
-                startActivity(intent);
-            }
-        });
+//        btn_panorama = (Button) findViewById(R.id.btn_panorama);
+//        btn_panorama.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+////                Intent intent = new Intent(MainActivity.this,PanoramaDemoActivityMain.class);
+////                startActivity(intent);
+//
+//                Intent intent = new Intent(MainActivity.this,GuideActivity.class);
+//               startActivity(intent);
+//            }
+//        });
 
         edt_search = (EditText) findViewById(R.id.edt_search);
         edt_search.setOnClickListener(new View.OnClickListener() {

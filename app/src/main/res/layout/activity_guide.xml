@@ -5,7 +5,7 @@
     android:id="@+id/activity_guide"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-android:orientation="vertical"
+    android:orientation="vertical"
     tools:context="com.example.yhdj.ad0313baidumap.GuideActivity">
 
     <LinearLayout
@@ -13,43 +13,83 @@ android:orientation="vertical"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         >
+
         <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="从"
             />
-<EditText
-    android:layout_width="0dp"
-    android:layout_weight="1"
-    android:layout_height="wrap_content"
-    android:id="@+id/edt_staring"
-    />
 
+        <EditText
+            android:id="@+id/edt_staring"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            />
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="到"
-            />
-        <EditText
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:id="@+id/edt_end"
+            android:text="市"
             />
 
+        <EditText
+            android:id="@+id/edt_begin_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:hint="起点"
+            />
 
 
     </LinearLayout>
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+            android:text="到"
+            />
+
+        <EditText
+            android:id="@+id/edt_end"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="市"
+            />
+
+        <EditText
+            android:id="@+id/edt_end_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:hint="终点"
+            />
+    </LinearLayout>
+
     <Button
+        android:id="@+id/btn_guide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="开始导航"
-        android:id="@+id/btn_guide"
         />
+
 
 </LinearLayout>

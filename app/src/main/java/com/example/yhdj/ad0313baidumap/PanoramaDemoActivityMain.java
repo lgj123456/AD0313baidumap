@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.baidu.lbsapi.BMapManager;
@@ -26,14 +28,17 @@ public class PanoramaDemoActivityMain extends AppCompatActivity implements com.b
     private double latitude;
     private double longitude;
     private String uid;
-
+    private Button btn_streetPano;
+    private Button btn_innerPano;
+    private boolean isStreetPano = false;
+    private boolean isInnerPano = false;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.title);
+        setContentView(R.layout.activity_panorama);
         getLocation();
         initViews();
-        initManager();
+     //   initManager();
 
     }
 
@@ -51,6 +56,24 @@ public class PanoramaDemoActivityMain extends AppCompatActivity implements com.b
     private void initViews() {
         mPanoramaView = (PanoramaView) findViewById(R.id.panorama);
         IndoorAlbumPlugin.getInstance().init();
+
+        btn_innerPano = (Button) findViewById(R.id.innerPano);
+        btn_streetPano = (Button) findViewById(R.id.streetPano);
+        btn_streetPano.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isStreetPano = true;
+                initManager();
+            }
+        });
+
+        btn_innerPano.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isInnerPano = true;
+                initManager();
+            }
+        });
 
         //113.359554,23.189111
 //设置全景图的俯仰角
@@ -98,18 +121,33 @@ public class PanoramaDemoActivityMain extends AppCompatActivity implements com.b
 
             app.mBMapManager.init(new PanoDemoApplication.MyGeneralListener());
         }
+        PanoramaRequest request = PanoramaRequest.getInstance(PanoramaDemoActivityMain.this);
+        BaiduPoiPanoData poiPanoData = request.getPanoramaInfoByUid(uid);
+        //判断是否有外景(街景)及内景
+        //   poiPanoData.hasStreetPano();
         if (longitude != 0 && latitude != 0) {
-            // mPanoramaView.setPanorama(longitude,latitude);
 
-            PanoramaRequest request = PanoramaRequest.getInstance(PanoramaDemoActivityMain.this);
-            BaiduPoiPanoData poiPanoData = request.getPanoramaInfoByUid(uid);
-            //判断是否有外景(街景)及内景
-            //   poiPanoData.hasStreetPano();
-            if (poiPanoData.hasInnerPano()) {
-                mPanoramaView.setPanoramaByUid(uid, PanoramaView.PANOTYPE_INTERIOR);
-            } else {
-                Toast.makeText(app, "您所选的地点没有内景图！！！", Toast.LENGTH_SHORT).show();
+            if(isStreetPano){
+                if (poiPanoData.hasStreetPano()){
+                    mPanoramaView.setPanorama(longitude,latitude);
+                }else{
+                    Toast.makeText(app, "您所选的地点没有外景图！！！", Toast.LENGTH_SHORT).show();
+                }
+
+                isStreetPano = false;
             }
+            if(isInnerPano){
+                isInnerPano = false;
+                if (poiPanoData.hasInnerPano()) {
+                    mPanoramaView.setPanoramaByUid(uid, PanoramaView.PANOTYPE_INTERIOR);
+                } else {
+                    Toast.makeText(app, "您所选的地点没有内景图！！！", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+
+
+
             //  mPanoramaView.setPanoramaByUid("28e700f15aae5418085cb3a7", PanoramaView.PANOTYPE_INTERIOR);
         }
 

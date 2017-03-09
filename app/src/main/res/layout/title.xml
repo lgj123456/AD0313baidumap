@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="wrap_content">
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,57 +12,72 @@
         >
 
         <Button
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="50dp"
             android:id="@+id/btn_city_search"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
             android:text="城市搜索"
             />
 
 
+        <Button
+            android:id="@+id/btn_routePlanSearch"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="导航"
+            />
 
         <Button
+            android:id="@+id/btn_panorama"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="50dp"
-            android:id="@+id/btn_routePlanSearch"
-            android:text="公交规划"
+            android:layout_weight="1"
+            android:text="查看全景"
             />
 
     </LinearLayout>
 
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout_guide"
         android:orientation="horizontal"
-        android:id="@+id/linearLayout_city"
         android:visibility="gone"
         >
-        <EditText
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="50dp"
-            android:hint="城市"
-            android:id="@+id/edt_city"
-            />
-
-        <EditText
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="50dp"
-            android:hint="关键字"
-            android:id="@+id/edr_keyboard"
-            />
+       <Button
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_height="wrap_content"
+           android:id="@+id/guide_bus"
+           android:text="公交"
+           />
 
         <Button
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="50dp"
-            android:id="@+id/btn_search"
-            android:text="搜索"
+            android:layout_height="wrap_content"
+            android:id="@+id/guide_walk"
+            android:text="步行"
             />
 
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:id="@+id/guide_drive"
+            android:text="驾车"
+            />
+
+
+
     </LinearLayout>
+
+
+
+
 
 
 
@@ -73,81 +88,156 @@
 
 
     <LinearLayout
+        android:id="@+id/linearLayout_city"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:orientation="horizontal"
-
-        android:id="@+id/linearLayout_routePlan"
+        android:visibility="gone"
         >
 
         <EditText
+            android:id="@+id/edt_city"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="50dp"
-            android:hint="起点城市"
-            android:id="@+id/edt_begin_city"
+            android:layout_weight="1"
+            android:hint="城市"
             />
 
         <EditText
+            android:id="@+id/edr_keyboard"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="50dp"
-            android:hint="起点"
-            android:id="@+id/edt_starting_point"
-            />
-
-
-        <EditText
-            android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="50dp"
-            android:hint="终点城市"
-            android:id="@+id/edt_end_city"
-            />
-
-
-        <EditText
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="50dp"
-            android:hint="终点"
-            android:id="@+id/edt_destination"
+            android:hint="关键字"
             />
 
         <Button
+            android:id="@+id/btn_search"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="50dp"
-            android:id="@+id/btn_search3"
+            android:layout_weight="1"
             android:text="搜索"
             />
 
     </LinearLayout>
 
 
-    <com.baidu.lbsapi.panoramaview.PanoramaView
-        android:id="@+id/panorama"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:clickable="true" />
 
+
+
+
+
+
+
+
+
+
+
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout_routePlan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="从"
+                />
+
+
+            <EditText
+                android:id="@+id/edt_begin_city"
+
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:hint="起点城市"
+                />
+
+
+            <EditText
+                android:id="@+id/edt_starting_point"
+                android:layout_width="300dp"
+                android:layout_height="50dp"
+                android:hint="起点"
+                android:gravity="center"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="到"
+                />
+
+            <EditText
+                android:id="@+id/edt_end_city"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:hint="终点城市"
+                />
+
+
+            <EditText
+                android:id="@+id/edt_destination"
+                android:layout_width="300dp"
+                android:layout_height="50dp"
+                android:hint="终点"
+                android:gravity="center"
+                />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_search3"
+
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="搜索"
+            android:layout_gravity="center"
+            />
+
+    </LinearLayout>
+
+
+    <!--<com.baidu.lbsapi.panoramaview.PanoramaView-->
+    <!--android:id="@+id/panorama"-->
+    <!--android:layout_width="fill_parent"-->
+    <!--android:layout_height="fill_parent"-->
+    <!--android:clickable="true" />-->
 
 
     <com.baidu.mapapi.map.MapView
+        android:id="@+id/mMapView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/mMapView"
         android:visibility="gone"
         ></com.baidu.mapapi.map.MapView>
 
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_content"
-android:visibility="gone"
-        />
-</ScrollView>
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            />
+    </ScrollView>
 </LinearLayout>

@@ -12,10 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.mapapi.map.BaiduMap;
-import com.baidu.mapapi.map.MapStatus;
-import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.search.core.SearchResult;
 import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
@@ -34,6 +31,7 @@ import com.baidu.mapapi.search.route.PlanNode;
 import com.baidu.mapapi.search.route.RoutePlanSearch;
 import com.baidu.mapapi.search.route.TransitRouteLine;
 import com.baidu.mapapi.search.route.TransitRouteResult;
+import com.baidu.mapapi.search.route.WalkingRoutePlanOption;
 import com.baidu.mapapi.search.route.WalkingRouteResult;
 
 import java.util.ArrayList;
@@ -66,7 +64,19 @@ public class SearchActivity extends AppCompatActivity {
     LatLng end;
     private BaiduMap mBaiduMap;
     private String uid;
-
+    private LinearLayout linearLayout_guide;
+    private Button guide_bus;
+    private Button guide_walk;
+    private Button guide_drive;
+    private String begin_city;
+    private String end_city;
+    private String starting_point;
+    private String destination;
+    private boolean isWalk = false;
+    private boolean isBus = false;
+    private Button btn_panorama;
+    private boolean isCity_search = false;
+    private boolean isPanorama = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +90,14 @@ public class SearchActivity extends AppCompatActivity {
     OnGetRoutePlanResultListener routeListener = new OnGetRoutePlanResultListener() {
         @Override
         public void onGetWalkingRouteResult(WalkingRouteResult walkingRouteResult) {
-//            Toast.makeText(SearchActivity.this, "walkingRouteResult " + walkingRouteResult.getRouteLines().get(0).getAllStep(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(SearchActivity.this, "walkingRouteResult " + walkingRouteResult.getRouteLines(), Toast.LENGTH_SHORT).show();
+       for(int i = 0; i < walkingRouteResult.getRouteLines().size(); i++){
+           for(int y = 0 ; y < walkingRouteResult.getRouteLines().get(i).getAllStep().size(); y++){
+               buffer.append(walkingRouteResult.getRouteLines().get(i).getAllStep().get(y).getInstructions());
+           }
+       }
+       tv_content.setText(buffer.toString());
+
         }
 
         @Override
@@ -132,17 +149,17 @@ public class SearchActivity extends AppCompatActivity {
             }
             Log.i("ccccccccccccccccc", "latitude: " + begin.latitude + "longitude" + begin.longitude);
 
-            MyLocationData data = new MyLocationData.Builder()
+//            MyLocationData data = new MyLocationData.Builder()
+//
+//
+//                    .direction(100).latitude(begin.latitude).longitude(begin.longitude).build();
+//            mBaiduMap.setMyLocationData(data);
+//            MapStatus.Builder buider = new MapStatus.Builder();
+//            buider.target(begin).zoom(18.0f);
+//            mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(buider.build()));
 
 
-                    .direction(100).latitude(begin.latitude).longitude(begin.longitude).build();
-            mBaiduMap.setMyLocationData(data);
-            MapStatus.Builder buider = new MapStatus.Builder();
-            buider.target(begin).zoom(18.0f);
-            mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(buider.build()));
-
-
-            // tv_content.setText(buffer.toString());
+            tv_content.setText(buffer.toString());
 
             Toast.makeText(SearchActivity.this, "MassTransitRouteResult:::::" + result.getRouteLines().get(0).getNewSteps().get(0).get(0).getInstructions(), Toast.LENGTH_SHORT).show();
 
@@ -166,6 +183,22 @@ public class SearchActivity extends AppCompatActivity {
 
 
     private void initViews() {
+        linearLayout_guide = (LinearLayout) findViewById(R.id.linearLayout_guide);
+        guide_bus = (Button) findViewById(R.id.guide_bus);
+        guide_walk = (Button) findViewById(R.id.guide_walk);
+        guide_drive = (Button) findViewById(R.id.guide_drive);
+        btn_panorama = (Button) findViewById(R.id.btn_panorama);
+        btn_panorama.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                linearLayout_city.setVisibility(View.VISIBLE);
+                linearLayout_guide.setVisibility(View.GONE);
+                linearLayout_routePlan.setVisibility(View.GONE);
+                isPanorama = true;
+            }
+        });
+
         mPoiSearch = PoiSearch.newInstance();
         mRoutePlanSearch = RoutePlanSearch.newInstance();
         mMapView = (MapView) findViewById(R.id.mMapView);
@@ -187,25 +220,44 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 linearLayout_city.setVisibility(View.VISIBLE);
+                linearLayout_guide.setVisibility(View.GONE);
                 linearLayout_routePlan.setVisibility(View.GONE);
             }
         });
+        guide_bus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                linearLayout_routePlan.setVisibility(View.VISIBLE);
+                isBus = true;
+                tv_content.setText("");
+            }
+        });
 
+        guide_walk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                linearLayout_routePlan.setVisibility(View.VISIBLE);
+                isWalk = true;
+                tv_content.setText("");
+            }
+        });
+
+        guide_drive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SearchActivity.this,GuideActivity.class);
+                startActivity(intent);
+            }
+        });
 
         //城市检索
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String city = edt_city.getText().toString().trim();
-                String keyboard = edt_keyboard.getText().toString().trim();
-                mPoiSearch.setOnGetPoiSearchResultListener(poiListener);
-                Log.i("aaaaaaaaaaaaaaa", "onClick: " + city + keyboard);
-                mPoiSearch.searchInCity((new PoiCitySearchOption()
-                        .city(city)
-                        .keyword(keyboard)
-                        .pageCapacity(500)
+                isCity_search = true;
+                citySearch();
 
-                ));
+
 
             }
         });
@@ -213,7 +265,7 @@ public class SearchActivity extends AppCompatActivity {
         btn_routePlan_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                linearLayout_routePlan.setVisibility(View.VISIBLE);
+                linearLayout_guide.setVisibility(View.VISIBLE);
                 linearLayout_city.setVisibility(View.GONE);
             }
         });
@@ -221,39 +273,72 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tv_content.setText("");
-                String begin_city = edt_begin_city.getText().toString().trim();
-                String end_city = edt_end_city.getText().toString().trim();
-                String starting_point = edt_staring_point.getText().toString().trim();
-                String destination = edt_destination.getText().toString().trim();
+                getcontent();
+
                 PlanNode stMassNode = PlanNode.withCityNameAndPlaceName(begin_city, starting_point);
                 PlanNode enMassNode = PlanNode.withCityNameAndPlaceName(end_city, destination);
 
-                mRoutePlanSearch.masstransitSearch(new MassTransitRoutePlanOption().from(stMassNode).to(enMassNode));
-                // mRoutePlanSearch.walkingSearch(new WalkingRoutePlanOption().from(stMassNode).to(enMassNode));
+                if (isBus) {
+                    mRoutePlanSearch.masstransitSearch(new MassTransitRoutePlanOption().from(stMassNode).to(enMassNode));
+                    isBus = false;
+                }
+
+
+                if (isWalk) {
+                    Toast.makeText(SearchActivity.this, "" + isWalk, Toast.LENGTH_SHORT).show();
+                    mRoutePlanSearch.walkingSearch(new WalkingRoutePlanOption().from(stMassNode).to(enMassNode));
+                    isWalk = false;
+                }
                 //  mRoutePlanSearch.transitSearch(new TransitRoutePlanOption().from(stMassNode).to(enMassNode).city("广州"));
             }
         });
 
     }
 
+    private void citySearch() {
+        String city = edt_city.getText().toString().trim();
+        String keyboard = edt_keyboard.getText().toString().trim();
+        mPoiSearch.setOnGetPoiSearchResultListener(poiListener);
+        Log.i("aaaaaaaaaaaaaaa", "onClick: " + city + keyboard);
+        mPoiSearch.searchInCity((new PoiCitySearchOption()
+                .city(city)
+                .keyword(keyboard)
+                .pageCapacity(500)
+
+        ));
+    }
+
+    private void getcontent() {
+        begin_city = edt_begin_city.getText().toString().trim();
+        end_city = edt_end_city.getText().toString().trim();
+        starting_point = edt_staring_point.getText().toString().trim();
+        destination = edt_destination.getText().toString().trim();
+    }
+
     OnGetPoiSearchResultListener poiListener = new OnGetPoiSearchResultListener() {
         public void onGetPoiResult(PoiResult result) {
             //获取POI检索结果
 
+if(isCity_search){
+    Log.i("bbbbbbbbbbbbb", "onGetPoiResult: " + result.getAllPoi().get(0).address);
 
-//            Log.i("bbbbbbbbbbbbb", "onGetPoiResult: " + result.getAllPoi().get(0).address);
-//
-//            Intent intent = new Intent(SearchActivity.this, MainActivity.class);
-//            getlocation(result);
-//            intent.putExtra("location", location);
-//            startActivity(intent);
-
+    Intent intent = new Intent(SearchActivity.this, MainActivity.class);
+    getlocation(result);
+    intent.putExtra("location", location);
+    startActivity(intent);
+    isCity_search = false;
+}
+          if(isPanorama){
+              //内景
             Intent intent = new Intent(SearchActivity.this, PanoramaDemoActivityMain.class);
             intent.putExtra("latitude", result.getAllPoi().get(0).location.latitude);
             intent.putExtra("longitude", result.getAllPoi().get(0).location.longitude);
             intent.putExtra("uid",result.getAllPoi().get(0).uid);
             startActivity(intent);
             mPoiSearch.destroy();
+              isPanorama = false;
+          }
+
         }
 
         public void onGetPoiDetailResult(PoiDetailResult result) {

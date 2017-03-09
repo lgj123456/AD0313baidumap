@@ -18,12 +18,12 @@
        android:hint="点击搜索"
        />
 
-<Button
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/btn_panorama"
-    android:text="全景"
-    />
+<!--<Button-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:id="@+id/btn_panorama"-->
+    <!--android:text="全景"-->
+    <!--/>-->
 
 
     <com.baidu.mapapi.map.MapView
